@@ -1,0 +1,40 @@
+{
+  "theme": {
+    "name": "system",
+    "mode": "dark"
+  },
+  "diffs": {
+    "wrap": "word",
+    "view": "auto",
+    "single": false
+  },
+  "session": {
+    "sidebar": "auto",
+    "scrollbar": true,
+    "thinking": "hide",
+    "grouping": "auto",
+    "verbosity": "medium",
+    "permissions": "prompt",
+    "image_preview": false,
+    "new_location": "launch"
+  },
+  "animations": true,
+  "keybinds": {
+    "agent.cycle": "tab",
+    "agent.cycle.reverse": "shift+tab"
+  },
+  "tabs": {
+    "layout": "horizontal",
+    "indicators": "numbers",
+    "scope": "cwd"
+  },
+  "scroll": {
+    "speed": 7
+  },
+  "terminal": {
+    "title": true
+  },
+  "debug": {
+    "devtools": false
+  }
+}

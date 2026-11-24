@@ -1,0 +1,11 @@
+# Secrets. service.json holds a plaintext password, so it must never be tracked.
+# The copy already sitting in history still needs a purge; ignore rules alone
+# only stop new changes from being staged.
+service.json
+.env
+*.bak
+
+# Development-only docs. Keep them on disk, never in git.
+GLOSSARY.md
+GLOSSARY-MAP.md
+docs/adr/
