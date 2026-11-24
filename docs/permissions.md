@@ -68,8 +68,8 @@ resource, so an allow has to cover every stage. See
 
 A `;` chain is checked one segment at a time, and one denied segment rejects the
 whole line. `&&` and `||` are not usable because Windows PowerShell 5.1 rejects
-them as separators. A `|` inside a quoted pattern such as `-Pattern "a|b"` is
-still split as a stage, so keep an alternation out of the quoted pattern.
+them as separators. The scanner splits on unquoted separators only, so an
+alternation inside a quoted pattern stays whole.
 
 ## Read-only escapes
 
