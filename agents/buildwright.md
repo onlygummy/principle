@@ -31,10 +31,17 @@ permissions:
   - { action: "shell", resource: "git stash*", effect: "allow" }
   - { action: "shell", resource: "git rm*", effect: "allow" }
   - { action: "shell", resource: "git mv*", effect: "allow" }
+  # Remote reads and fast-forward integration. Fetch moves refs only, and the
+  # pull refuses a non-fast-forward, so neither rewrites the branch.
+  - { action: "shell", resource: "git fetch*", effect: "allow" }
+  - { action: "shell", resource: "git pull --ff-only*", effect: "allow" }
   # Staging belongs to buildwright so it can control the index end to end. A commit is
   # local and reversible and the gate is the merge click, so buildwright writes one
   # too. `git push*` still never gets an allow here. See docs/adr/0020.
   - { action: "shell", resource: "git add*", effect: "allow" }
+  # Unstage only. After `--` every word is a pathspec, so no flag can reach file
+  # content, and `git reset --hard` matches no allow.
+  - { action: "shell", resource: "git reset -- *", effect: "allow" }
   - { action: "shell", resource: "git commit*", effect: "allow" }
   # Build may cut the short-lived branch itself, in addition to dispatching
   # branchwright. Unlike the subagent it holds no pre-check of its own, so the
@@ -46,6 +53,10 @@ permissions:
   # branch and abort a failed merge. Force merge and hard reset stay denied.
   - { action: "shell", resource: "git merge*", effect: "allow" }
   - { action: "shell", resource: "git merge --abort*", effect: "allow" }
+  # Forward-only undo: revert and cherry-pick add a commit and never rewrite
+  # history, so the branch stays pushable without a force push.
+  - { action: "shell", resource: "git revert*", effect: "allow" }
+  - { action: "shell", resource: "git cherry-pick*", effect: "allow" }
   # Read-only git. Layer 1: commands with no write mode at all. Must stay under
   # the `git *` deny above, so appending at the end of this block is required.
   - { action: "shell", resource: "git blame*", effect: "allow" }
@@ -84,6 +95,8 @@ permissions:
   - { action: "shell", resource: "git reflog list*", effect: "allow" }
   - { action: "shell", resource: "git remote -v*", effect: "allow" }
   - { action: "shell", resource: "git remote get-url*", effect: "allow" }
+  # Reads the remote HEAD branch when origin/HEAD is unset. No write form.
+  - { action: "shell", resource: "git remote show*", effect: "allow" }
   - { action: "shell", resource: "git worktree list*", effect: "allow" }
   - { action: "shell", resource: "git notes list*", effect: "allow" }
   - { action: "shell", resource: "git notes show*", effect: "allow" }
@@ -92,6 +105,17 @@ permissions:
   - { action: "shell", resource: "git stash show*", effect: "allow" }
   - { action: "shell", resource: "git bundle list-heads*", effect: "allow" }
   - { action: "shell", resource: "git bundle verify*", effect: "allow" }
+
+  # Read-only GitHub context. Build writes the commit; opening and merging the PR
+  # belong to shipwright, so no gh write form is opened here.
+  - { action: "shell", resource: "gh repo view*", effect: "allow" }
+  - { action: "shell", resource: "gh pr view*", effect: "allow" }
+  - { action: "shell", resource: "gh pr list*", effect: "allow" }
+  - { action: "shell", resource: "gh pr diff*", effect: "allow" }
+  - { action: "shell", resource: "gh pr checks*", effect: "allow" }
+  - { action: "shell", resource: "gh run list*", effect: "allow" }
+  - { action: "shell", resource: "gh run view*", effect: "allow" }
+  - { action: "shell", resource: "gh auth status*", effect: "allow" }
 
   # Tests ask first. Build normally validates with lint/typecheck only;
   # Review runs the test suite as the pre-push gate (see docs/adr/0004).

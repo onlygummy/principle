@@ -55,6 +55,8 @@ permissions:
   - { action: "shell", resource: "git reflog list*", effect: "allow" }
   - { action: "shell", resource: "git remote -v*", effect: "allow" }
   - { action: "shell", resource: "git remote get-url*", effect: "allow" }
+  # Reads the remote HEAD branch when origin/HEAD is unset. No write form.
+  - { action: "shell", resource: "git remote show*", effect: "allow" }
   - { action: "shell", resource: "git worktree list*", effect: "allow" }
   - { action: "shell", resource: "git notes list*", effect: "allow" }
   - { action: "shell", resource: "git notes show*", effect: "allow" }
@@ -115,6 +117,16 @@ permissions:
   - { action: "shell", resource: "pnpm run *", effect: "ask" }
   - { action: "shell", resource: "pnpm run lint*", effect: "allow" }
   - { action: "shell", resource: "pnpm run typecheck*", effect: "allow" }
+  # Read-only GitHub context for planning: the trunk, open PRs, open issues.
+  # No write form: pr create, pr merge, and api stay unreachable.
+  - { action: "shell", resource: "gh repo view*", effect: "allow" }
+  - { action: "shell", resource: "gh pr list*", effect: "allow" }
+  - { action: "shell", resource: "gh pr view*", effect: "allow" }
+  - { action: "shell", resource: "gh pr diff*", effect: "allow" }
+  - { action: "shell", resource: "gh pr checks*", effect: "allow" }
+  - { action: "shell", resource: "gh issue list*", effect: "allow" }
+  - { action: "shell", resource: "gh issue view*", effect: "allow" }
+  - { action: "shell", resource: "gh auth status*", effect: "allow" }
   # Read-only pipeline stages. The scanner checks each pipe segment as its own
   # resource, so a pipeline needs an allow per cmdlet rather than one rule for
   # the whole line. `ForEach-Object` and `Where-Object` stay denied: their main
