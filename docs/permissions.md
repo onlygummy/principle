@@ -41,7 +41,7 @@ and are not in git.
 | Agent | Edit scope | Shell scope |
 | --- | --- | --- |
 | `planwright` | Nothing | Read-only git and `gh` (repo, pr, issue), read-only file and exploration commands, and project run commands (lint and typecheck run without a prompt; test and verify ask first) |
-| `buildwright` | Code and config; docs files are denied | Full allow, but `git *` is denied except read forms, `git fetch` (force spellings are denied), `git pull --ff-only`, `git add`, `git rm`, `git mv`, `git reset -- <path>`, `git stash`, `git commit`, `git revert`, `git cherry-pick`, `git merge`, and `git switch*`; read-only `gh` (repo, pr, run); `--amend` is allowed only on an unpushed commit, `--no-verify` and `-n` are denied, push stays denied, and the destructive switch forms are denied; test runners ask |
+| `buildwright` | Code and config; docs files and `.opencode/plan/` are denied | Full allow, but `git *` is denied except read forms, `git fetch` (force spellings are denied), `git pull --ff-only`, `git add`, `git rm`, `git mv`, `git reset -- <path>`, `git stash`, `git commit`, `git revert`, `git cherry-pick`, `git merge`, and `git switch*`; read-only `gh` (repo, pr, run); `--amend` is allowed only on an unpushed commit, `--no-verify` and `-n` are denied, push stays denied, and the destructive switch forms are denied; test runners ask |
 | `branchwright` | Nothing | Read-only state checks plus `cd *` and `git switch -c*`; destructive switch forms and branch deletion are denied |
 | `verifywright` | Nothing | Read-only git, lint and typecheck commands, and test runners that ask |
 | `reviewwright` | Nothing | Read-only git, test runners, and lint; no `add`, `commit`, or `push` |
@@ -103,8 +103,8 @@ without any flag that could reach file content. See
 A bare `git tag v1` creates a lightweight tag with no flag at all, and a list
 flag such as `--sort` does not pin list mode, so denying individual write flags
 leaves gaps. `shipwright`, `planwright`, `buildwright`, and `reviewwright` deny
-the whole `git tag` command and allow back only `--list`, `-l`, and `-n`, which
-pin list mode.
+the whole `git tag` command and allow back only list forms: `--list` and `-l`,
+plus `-n` in every agent except `shipwright`. All of them pin list mode.
 
 `buildwright` now holds a commit write. A commit stays on the local branch and
 can be amended or dropped, so it is not where work leaves the machine; the

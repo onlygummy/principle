@@ -195,14 +195,19 @@ permissions:
   - { action: "shell", resource: "git commit *--no-verify*", effect: "deny" }
   - { action: "shell", resource: "git commit -n*", effect: "deny" }
   # Force spellings on fetch and pull move a local ref without touching the
-  # branch guards above, so each one loses the match here.
+  # branch guards above, so each one loses the match here. A stacked short flag
+  # hides `-f`, and a colon-only refspec deletes the local branch.
   - { action: "shell", resource: "git fetch -f*", effect: "deny" }
+  - { action: "shell", resource: "git fetch -?f*", effect: "deny" }
   - { action: "shell", resource: "git fetch --force*", effect: "deny" }
   - { action: "shell", resource: "git fetch * -f*", effect: "deny" }
+  - { action: "shell", resource: "git fetch * -?f*", effect: "deny" }
   - { action: "shell", resource: "git fetch *--force*", effect: "deny" }
   - { action: "shell", resource: "git fetch *+*", effect: "deny" }
-  - { action: "shell", resource: "git pull *+*", effect: "deny" }
+  - { action: "shell", resource: "git fetch * :*", effect: "deny" }
   - { action: "shell", resource: "git pull * -f*", effect: "deny" }
+  - { action: "shell", resource: "git pull * -?f*", effect: "deny" }
+  - { action: "shell", resource: "git pull *+*", effect: "deny" }
   - { action: "shell", resource: "git pull *--force*", effect: "deny" }
 ---
 
@@ -232,8 +237,8 @@ You must apply these 6 principles to every line of code you generate or review:
 A pipeline or a `;` chain runs in one call when every segment is allowed. The
 scanner checks each segment as its own resource, so one denied segment rejects
 the whole line. Use a pipeline to filter long output in place, and a `;` chain
-only for independent reads. Never chain a write with a follow-on step, because
-`;` runs the next command even when the first one fails. `&&` and `||` are not
+only for independent reads. Never put a write in a `;` chain, because `;` runs
+the next command even when the first one fails. `&&` and `||` are not
 usable here: Windows PowerShell 5.1 rejects them as separators. Split dependent
 steps into separate calls so you can read each result before the next, and quote
 paths that contain spaces.

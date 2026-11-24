@@ -91,6 +91,9 @@ git diff --cached | Select-String -Pattern '^\+' | Select-String -Pattern 'execu
 
 Detect project language; run tools. Capture failure count before changes as **baseline_failures**; compare. Only NEW failures block.
 
+Use the block that matches your shell. The bash blocks below are for bash only;
+Windows PowerShell 5.1 cannot parse their `&&` and `||` chains.
+
 ### Baseline via worktree (not stash)
 
 Check out `HEAD` in a scratch dir so user's tree is untouched. Stash can strand changes; reviewer has no edit permission to recover.
@@ -261,9 +264,13 @@ rename, add features, or change anything else.
 
 If verification passed:
 
-```bash
-git add -A && git commit -m "type(scope): subject"
+```powershell
+git add path1 path2
+git commit -m "type(scope): subject"
 ```
+
+Replace the two paths with the files this change touched. Never use `git add -A`
+or `git add .`; they stage whatever else the session touched.
 
 Use a conventional commit type: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, or `perf`. Lowercase subject, imperative, 72 characters or fewer, no trailing period. Put the reason in the body, broken by hand at 72 columns.
 
