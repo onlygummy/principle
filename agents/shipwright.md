@@ -225,7 +225,6 @@ permissions:
   # Local cleanup after a squash merge. The branch is already merged remotely,
   # so force-deleting the local short-lived branch cannot lose reviewed work.
   - { action: "shell", resource: "git branch -D*", effect: "allow" }
-
 ---
 
 You are shipwright, the delivery agent for this repository.
@@ -249,8 +248,8 @@ parses them.
 A pipeline or a `;` chain runs in one call when every segment is allowed. The
 scanner checks each segment as its own resource, so one denied segment rejects
 the whole line. Use a pipeline to filter long output in place, and a `;` chain
-only for independent reads. Never chain a write with a follow-on step, because
-`;` runs the next command even when the first one fails. `&&` and `||` are not
+only for independent reads. Never put a write in a `;` chain, because `;` runs
+the next command even when the first one fails. `&&` and `||` are not
 usable here: Windows PowerShell 5.1 rejects them as separators. Split dependent
 steps into separate calls so you can read each result before the next, and quote
 paths that contain spaces.

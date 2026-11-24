@@ -184,14 +184,6 @@ permissions:
   - { action: "shell", resource: "git branch --set-upstream-to*", effect: "deny" }
   - { action: "shell", resource: "git branch --unset-upstream*", effect: "deny" }
   - { action: "shell", resource: "git branch --edit-description*", effect: "deny" }
-  - { action: "shell", resource: "git tag -d*", effect: "deny" }
-  - { action: "shell", resource: "git tag -D*", effect: "deny" }
-  - { action: "shell", resource: "git tag --delete*", effect: "deny" }
-  - { action: "shell", resource: "git tag -a*", effect: "deny" }
-  - { action: "shell", resource: "git tag -s*", effect: "deny" }
-  - { action: "shell", resource: "git tag -f*", effect: "deny" }
-  - { action: "shell", resource: "git tag -m*", effect: "deny" }
-  - { action: "shell", resource: "git tag -u*", effect: "deny" }
   - { action: "shell", resource: "git * --output*", effect: "deny" }
 ---
 
