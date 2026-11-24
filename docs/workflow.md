@@ -38,8 +38,14 @@ and holds one git write, `git switch -c*`, plus `cd *` so it can set the repo as
 the shell's working directory; `git -C` is still not allowed. The rest is state
 reads. It never force-switches or reuses a name.
 
-Every agent now opens its system prompt by naming its own id, so a handoff names
-the right tab and a subagent never offers to switch to another agent.
+Every agent opens its system prompt by naming its own id and repeats it at the
+end. A handoff therefore names the right tab, and a subagent never offers to
+switch to another agent.
+
+In V2 a mid-session agent switch can reach the model without any signal that it
+happened, and the agent's own permissions are the only reliable check. For a
+handoff that matters, start a new session on the target agent instead of pressing
+Tab.
 
 ## reviewwright
 
