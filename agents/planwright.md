@@ -6,9 +6,8 @@ permissions:
   # Rules append after the global list; the last match wins. Broad deny first,
   # then the narrow exceptions this agent actually needs.
   #
-  # Edits only plan files. Glossary/docs written by scribewright.
+  # Read-only: no file writes. Glossary and docs are written by scribewright.
   - { action: "edit", resource: "*", effect: "deny" }
-  - { action: "edit", resource: ".opencode/plan/**", effect: "allow" }
   # Grilling dispatches fact-finding sub-agents so the interview never asks the
   # user for something the filesystem can answer.
   - { action: "subagent", resource: "*", effect: "allow" }
@@ -47,15 +46,18 @@ permissions:
   - { action: "shell", resource: "git config --get*", effect: "allow" }
   # Layer 2: mixed commands, read-only sub-forms only. Their write forms stay
   # denied because no blanket `git <cmd>*` rule exists for them.
+  # Tag listing only. A bare `git tag v1` creates a lightweight tag, so the
+  # whole command is denied unless a list form pins the mode below.
+  - { action: "shell", resource: "git tag *", effect: "deny" }
   - { action: "shell", resource: "git tag --list*", effect: "allow" }
   - { action: "shell", resource: "git tag -l*", effect: "allow" }
   - { action: "shell", resource: "git tag -n*", effect: "allow" }
-  - { action: "shell", resource: "git tag --contains*", effect: "allow" }
-  - { action: "shell", resource: "git tag --sort*", effect: "allow" }
   - { action: "shell", resource: "git reflog show*", effect: "allow" }
   - { action: "shell", resource: "git reflog list*", effect: "allow" }
   - { action: "shell", resource: "git remote -v*", effect: "allow" }
   - { action: "shell", resource: "git remote get-url*", effect: "allow" }
+  # Reads the remote HEAD branch when origin/HEAD is unset. No write form.
+  - { action: "shell", resource: "git remote show*", effect: "allow" }
   - { action: "shell", resource: "git worktree list*", effect: "allow" }
   - { action: "shell", resource: "git notes list*", effect: "allow" }
   - { action: "shell", resource: "git notes show*", effect: "allow" }
@@ -116,6 +118,16 @@ permissions:
   - { action: "shell", resource: "pnpm run *", effect: "ask" }
   - { action: "shell", resource: "pnpm run lint*", effect: "allow" }
   - { action: "shell", resource: "pnpm run typecheck*", effect: "allow" }
+  # Read-only GitHub context for planning: the trunk, open PRs, open issues.
+  # No write form: pr create, pr merge, and api stay unreachable.
+  - { action: "shell", resource: "gh repo view*", effect: "allow" }
+  - { action: "shell", resource: "gh pr list*", effect: "allow" }
+  - { action: "shell", resource: "gh pr view*", effect: "allow" }
+  - { action: "shell", resource: "gh pr diff*", effect: "allow" }
+  - { action: "shell", resource: "gh pr checks*", effect: "allow" }
+  - { action: "shell", resource: "gh issue list*", effect: "allow" }
+  - { action: "shell", resource: "gh issue view*", effect: "allow" }
+  - { action: "shell", resource: "gh auth status*", effect: "allow" }
   # Read-only pipeline stages. The scanner checks each pipe segment as its own
   # resource, so a pipeline needs an allow per cmdlet rather than one rule for
   # the whole line. `ForEach-Object` and `Where-Object` stay denied: their main
@@ -151,16 +163,6 @@ permissions:
   - { action: "shell", resource: "git branch --set-upstream-to*", effect: "deny" }
   - { action: "shell", resource: "git branch --unset-upstream*", effect: "deny" }
   - { action: "shell", resource: "git branch --edit-description*", effect: "deny" }
-  # `git tag` is only allowed as read sub-forms above, but a write flag can be
-  # appended to one of them. Deny the write flags explicitly.
-  - { action: "shell", resource: "git tag -d*", effect: "deny" }
-  - { action: "shell", resource: "git tag -D*", effect: "deny" }
-  - { action: "shell", resource: "git tag --delete*", effect: "deny" }
-  - { action: "shell", resource: "git tag -a*", effect: "deny" }
-  - { action: "shell", resource: "git tag -s*", effect: "deny" }
-  - { action: "shell", resource: "git tag -f*", effect: "deny" }
-  - { action: "shell", resource: "git tag -m*", effect: "deny" }
-  - { action: "shell", resource: "git tag -u*", effect: "deny" }
   # `--output=<file>` turns a read command into a file write.
   - { action: "shell", resource: "git * --output*", effect: "deny" }
 ---

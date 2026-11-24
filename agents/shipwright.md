@@ -29,6 +29,11 @@ permissions:
   # Step 0 fallback when `origin/HEAD` does not resolve. Read-only: it reports
   # the remote's HEAD branch and its tracked refs.
   - { action: "shell", resource: "git remote show*", effect: "allow" }
+  # Release awareness without release rights: listing is readable, and the
+  # deny below makes every other tag form unreachable.
+  - { action: "shell", resource: "git tag *", effect: "deny" }
+  - { action: "shell", resource: "git tag --list*", effect: "allow" }
+  - { action: "shell", resource: "git tag -l*", effect: "allow" }
   # Rule 4 reads the trunk with `git rev-parse --abbrev-ref origin/HEAD`. The
   # symbolic-ref read sits in the write-guard block at the end of this list,
   # because the deny there also matches the one-argument form.
@@ -78,11 +83,25 @@ permissions:
   - { action: "shell", resource: "gh pr list*", effect: "allow" }
   - { action: "shell", resource: "gh pr checks*", effect: "allow" }
   - { action: "shell", resource: "gh pr diff*", effect: "allow" }
+  # Read failures, not write. The wait script names a failed check; these read
+  # its log and the overall PR state.
+  - { action: "shell", resource: "gh run list*", effect: "allow" }
+  - { action: "shell", resource: "gh run view*", effect: "allow" }
+  - { action: "shell", resource: "gh pr status*", effect: "allow" }
   # The wait script is the merge gate. Allow it by file name only, so no other
   # PowerShell command becomes reachable. The path lives in the OpenCode config
   # tree, not the project, because that is where the skill ships its scripts.
   - { action: "shell", resource: "powershell -ExecutionPolicy Bypass -File *wait-for-pr.ps1*", effect: "allow" }
   - { action: "shell", resource: "pwsh -ExecutionPolicy Bypass -File *wait-for-pr.ps1*", effect: "allow" }
+  # Build evidence for a repo with no CI. Ask, because a build can be slow and
+  # can write into the worktree; the wait script stays the merge gate.
+  - { action: "shell", resource: "npm run build*", effect: "ask" }
+  - { action: "shell", resource: "bun run build*", effect: "ask" }
+  - { action: "shell", resource: "pnpm run build*", effect: "ask" }
+  - { action: "shell", resource: "yarn run build*", effect: "ask" }
+  - { action: "shell", resource: "cargo build*", effect: "ask" }
+  - { action: "shell", resource: "go build*", effect: "ask" }
+  - { action: "shell", resource: "dotnet build*", effect: "ask" }
 
   # Write guards. Last match wins, so these must stay at the end.
   # Force push has to lose the match wherever the flag sits, not only when it
@@ -206,6 +225,7 @@ permissions:
   # Local cleanup after a squash merge. The branch is already merged remotely,
   # so force-deleting the local short-lived branch cannot lose reviewed work.
   - { action: "shell", resource: "git branch -D*", effect: "allow" }
+
 ---
 
 You are shipwright, the delivery agent for this repository.
@@ -249,7 +269,7 @@ Load the `git-delivery` skill and follow its order. Do nothing else before it.
    never amend a pushed commit.
 3. Never commit a secret, a `.env` file, credentials, build output, or anything
    `.gitignore` already covers. The same applies to `GLOSSARY.md`,
-   `GLOSSARY-MAP.md`, `docs/adr/`, and plan files; they are local-only.
+   `GLOSSARY-MAP.md`, and `docs/adr/`; they are local-only.
 4. Never assume the trunk is `main`. Read it from
    `gh repo view --json defaultBranchRef`, or `git rev-parse --abbrev-ref
    origin/HEAD` when `gh` fails, and drop the `origin/` prefix.

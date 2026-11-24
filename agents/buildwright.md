@@ -9,6 +9,9 @@ permissions:
   - { action: "edit", resource: "*GLOSSARY-MAP.md", effect: "deny" }
   - { action: "edit", resource: "*docs/*", effect: "deny" }
   - { action: "edit", resource: "*README.md", effect: "deny" }
+  # The plan folder is retired, so no agent writes plan files. Deny the path here
+  # too, otherwise the broad allow above would still reach it.
+  - { action: "edit", resource: "*.opencode/plan/*", effect: "deny" }
   # Skills are editable even when their path contains "docs" (e.g. grill-with-docs).
   - { action: "edit", resource: "*skills/*", effect: "allow" }
   # Subagent dispatch allowlist.
@@ -19,6 +22,9 @@ permissions:
   # local enough to write to. Order matters, last match wins: broad allow, then
   # the git deny, then the git exceptions that must win.
   - { action: "shell", resource: "*", effect: "allow" }
+  # Shell is broad, so GitHub access has to be pulled back explicitly. Without
+  # this deny the read allows below would restrict nothing.
+  - { action: "shell", resource: "gh *", effect: "deny" }
   - { action: "shell", resource: "git *", effect: "deny" }
   - { action: "shell", resource: "git status*", effect: "allow" }
   - { action: "shell", resource: "git diff*", effect: "allow" }
@@ -28,10 +34,17 @@ permissions:
   - { action: "shell", resource: "git stash*", effect: "allow" }
   - { action: "shell", resource: "git rm*", effect: "allow" }
   - { action: "shell", resource: "git mv*", effect: "allow" }
+  # Remote reads and fast-forward integration. Fetch moves refs only, and the
+  # pull refuses a non-fast-forward, so neither rewrites the branch.
+  - { action: "shell", resource: "git fetch*", effect: "allow" }
+  - { action: "shell", resource: "git pull --ff-only*", effect: "allow" }
   # Staging belongs to buildwright so it can control the index end to end. A commit is
   # local and reversible and the gate is the merge click, so buildwright writes one
   # too. `git push*` still never gets an allow here. See docs/adr/0020.
   - { action: "shell", resource: "git add*", effect: "allow" }
+  # Unstage only. After `--` every word is a pathspec, so no flag can reach file
+  # content, and `git reset --hard` matches no allow.
+  - { action: "shell", resource: "git reset -- *", effect: "allow" }
   - { action: "shell", resource: "git commit*", effect: "allow" }
   # Build may cut the short-lived branch itself, in addition to dispatching
   # branchwright. Unlike the subagent it holds no pre-check of its own, so the
@@ -43,6 +56,10 @@ permissions:
   # branch and abort a failed merge. Force merge and hard reset stay denied.
   - { action: "shell", resource: "git merge*", effect: "allow" }
   - { action: "shell", resource: "git merge --abort*", effect: "allow" }
+  # Forward-only undo: revert and cherry-pick add a commit and never rewrite
+  # history, so the branch stays pushable without a force push.
+  - { action: "shell", resource: "git revert*", effect: "allow" }
+  - { action: "shell", resource: "git cherry-pick*", effect: "allow" }
   # Read-only git. Layer 1: commands with no write mode at all. Must stay under
   # the `git *` deny above, so appending at the end of this block is required.
   - { action: "shell", resource: "git blame*", effect: "allow" }
@@ -72,15 +89,18 @@ permissions:
   - { action: "shell", resource: "git config --get*", effect: "allow" }
   # Layer 2: mixed commands, read-only sub-forms only. Their write forms stay
   # denied because no blanket `git <cmd>*` rule exists for them.
+  # Tag listing only. A bare `git tag v1` creates a lightweight tag, so the
+  # whole command is denied unless a list form pins the mode below.
+  - { action: "shell", resource: "git tag *", effect: "deny" }
   - { action: "shell", resource: "git tag --list*", effect: "allow" }
   - { action: "shell", resource: "git tag -l*", effect: "allow" }
   - { action: "shell", resource: "git tag -n*", effect: "allow" }
-  - { action: "shell", resource: "git tag --contains*", effect: "allow" }
-  - { action: "shell", resource: "git tag --sort*", effect: "allow" }
   - { action: "shell", resource: "git reflog show*", effect: "allow" }
   - { action: "shell", resource: "git reflog list*", effect: "allow" }
   - { action: "shell", resource: "git remote -v*", effect: "allow" }
   - { action: "shell", resource: "git remote get-url*", effect: "allow" }
+  # Reads the remote HEAD branch when origin/HEAD is unset. No write form.
+  - { action: "shell", resource: "git remote show*", effect: "allow" }
   - { action: "shell", resource: "git worktree list*", effect: "allow" }
   - { action: "shell", resource: "git notes list*", effect: "allow" }
   - { action: "shell", resource: "git notes show*", effect: "allow" }
@@ -89,6 +109,17 @@ permissions:
   - { action: "shell", resource: "git stash show*", effect: "allow" }
   - { action: "shell", resource: "git bundle list-heads*", effect: "allow" }
   - { action: "shell", resource: "git bundle verify*", effect: "allow" }
+
+  # Read-only GitHub context. Build writes the commit; opening and merging the PR
+  # belong to shipwright, so no gh write form is opened here.
+  - { action: "shell", resource: "gh repo view*", effect: "allow" }
+  - { action: "shell", resource: "gh pr view*", effect: "allow" }
+  - { action: "shell", resource: "gh pr list*", effect: "allow" }
+  - { action: "shell", resource: "gh pr diff*", effect: "allow" }
+  - { action: "shell", resource: "gh pr checks*", effect: "allow" }
+  - { action: "shell", resource: "gh run list*", effect: "allow" }
+  - { action: "shell", resource: "gh run view*", effect: "allow" }
+  - { action: "shell", resource: "gh auth status*", effect: "allow" }
 
   # Tests ask first. Build normally validates with lint/typecheck only;
   # Review runs the test suite as the pre-push gate (see docs/adr/0004).
@@ -163,6 +194,16 @@ permissions:
   # never skips it. `-n` is the short spelling and needs its own rule.
   - { action: "shell", resource: "git commit *--no-verify*", effect: "deny" }
   - { action: "shell", resource: "git commit -n*", effect: "deny" }
+  # Force spellings on fetch and pull move a local ref without touching the
+  # branch guards above, so each one loses the match here.
+  - { action: "shell", resource: "git fetch -f*", effect: "deny" }
+  - { action: "shell", resource: "git fetch --force*", effect: "deny" }
+  - { action: "shell", resource: "git fetch * -f*", effect: "deny" }
+  - { action: "shell", resource: "git fetch *--force*", effect: "deny" }
+  - { action: "shell", resource: "git fetch *+*", effect: "deny" }
+  - { action: "shell", resource: "git pull *+*", effect: "deny" }
+  - { action: "shell", resource: "git pull * -f*", effect: "deny" }
+  - { action: "shell", resource: "git pull *--force*", effect: "deny" }
 ---
 
 You are buildwright, the engineering agent for this repository.
@@ -239,7 +280,7 @@ paths that contain spaces.
 
 6. **Verify (lint only):** After editing, run lint or typecheck only (`eslint`, `ruff`, `mypy`, `tsc`, `cargo clippy`, `go vet`, or the project's equivalent). Do not run test suites by default; the reviewer runs tests when it verifies the change. If a change needs a test run to confirm, dispatch the `verifywright` subagent, which runs the tests and reports the evidence, or stop and tell the user. Writing a test is allowed; running it is not a default step.
 
-7. **Commit:** Once per logical change, after lint passes and the change is done. Before committing, load `show-me-your-work` to prove the change with evidence. Stage paths by name; `git add -A` and `git add .` pick up whatever else the session touched, so they are banned, and a `.env` file, a credential, or build output is never staged. `GLOSSARY.md`, `GLOSSARY-MAP.md`, `docs/adr/`, and plan files are local-only and never staged. Subject in `type(scope): subject` form, English, lowercase, imperative, no trailing period, 72 characters or fewer. Body gives the reason, not a restatement of the diff. No `Co-authored-by`, no agent attribution. One branch carries one change, so unrelated work never joins the commit. Never push: push and the pull request belong to the delivery step. `--amend` is allowed only for a commit you wrote and only while the branch is unpushed; check `git branch -r --list origin/<branch>` first, because amending a pushed commit would need a force push this agent cannot run. Hooks are never skipped, and `--no-verify` is denied.
+7. **Commit:** Once per logical change, after lint passes and the change is done. Before committing, load `show-me-your-work` to prove the change with evidence. Stage paths by name; `git add -A` and `git add .` pick up whatever else the session touched, so they are banned, and a `.env` file, a credential, or build output is never staged. `GLOSSARY.md`, `GLOSSARY-MAP.md`, and `docs/adr/` are local-only and never staged. Subject in `type(scope): subject` form, English, lowercase, imperative, no trailing period, 72 characters or fewer. Body gives the reason, not a restatement of the diff. No `Co-authored-by`, no agent attribution. One branch carries one change, so unrelated work never joins the commit. Never push: push and the pull request belong to the delivery step. `--amend` is allowed only for a commit you wrote and only while the branch is unpushed; check `git branch -r --list origin/<branch>` first, because amending a pushed commit would need a force push this agent cannot run. Hooks are never skipped, and `--no-verify` is denied.
 
 8. **Explain:** Briefly explain what changes were made and why, in the **same language as the user's request** and in terse style. Focus on what was done, not the principle names.
 

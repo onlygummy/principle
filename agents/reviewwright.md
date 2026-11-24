@@ -141,11 +141,12 @@ permissions:
   - { action: "shell", resource: "git config --get*", effect: "allow" }
   # Layer 2: mixed commands, read-only sub-forms only. Their write forms stay
   # denied because no blanket `git <cmd>*` rule exists for them.
+  # Tag listing only. A bare `git tag v1` creates a lightweight tag, so the
+  # whole command is denied unless a list form pins the mode below.
+  - { action: "shell", resource: "git tag *", effect: "deny" }
   - { action: "shell", resource: "git tag --list*", effect: "allow" }
   - { action: "shell", resource: "git tag -l*", effect: "allow" }
   - { action: "shell", resource: "git tag -n*", effect: "allow" }
-  - { action: "shell", resource: "git tag --contains*", effect: "allow" }
-  - { action: "shell", resource: "git tag --sort*", effect: "allow" }
   - { action: "shell", resource: "git reflog show*", effect: "allow" }
   - { action: "shell", resource: "git reflog list*", effect: "allow" }
   - { action: "shell", resource: "git remote -v*", effect: "allow" }
