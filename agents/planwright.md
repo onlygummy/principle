@@ -174,6 +174,16 @@ permissions:
   - { action: "shell", resource: "git tag -u*", effect: "deny" }
   # `--output=<file>` turns a read command into a file write.
   - { action: "shell", resource: "git * --output*", effect: "deny" }
+  # A list flag such as `--sort` leaves the tag command mode unset, so a write
+  # flag can follow a read allow. Every write flag loses the match here.
+  - { action: "shell", resource: "git tag * -d*", effect: "deny" }
+  - { action: "shell", resource: "git tag * -D*", effect: "deny" }
+  - { action: "shell", resource: "git tag * --delete*", effect: "deny" }
+  - { action: "shell", resource: "git tag * -a*", effect: "deny" }
+  - { action: "shell", resource: "git tag * -m*", effect: "deny" }
+  - { action: "shell", resource: "git tag * -f*", effect: "deny" }
+  - { action: "shell", resource: "git tag * -s*", effect: "deny" }
+  - { action: "shell", resource: "git tag * -u*", effect: "deny" }
 ---
 
 ## Role

@@ -22,6 +22,9 @@ permissions:
   # local enough to write to. Order matters, last match wins: broad allow, then
   # the git deny, then the git exceptions that must win.
   - { action: "shell", resource: "*", effect: "allow" }
+  # Shell is broad, so GitHub access has to be pulled back explicitly. Without
+  # this deny the read allows below would restrict nothing.
+  - { action: "shell", resource: "gh *", effect: "deny" }
   - { action: "shell", resource: "git *", effect: "deny" }
   - { action: "shell", resource: "git status*", effect: "allow" }
   - { action: "shell", resource: "git diff*", effect: "allow" }
@@ -190,6 +193,9 @@ permissions:
   # never skips it. `-n` is the short spelling and needs its own rule.
   - { action: "shell", resource: "git commit *--no-verify*", effect: "deny" }
   - { action: "shell", resource: "git commit -n*", effect: "deny" }
+  # A refspec with a leading `+` moves a local ref by force, which would bypass
+  # the branch-write guards above.
+  - { action: "shell", resource: "git fetch *+*", effect: "deny" }
 ---
 
 ## Role
