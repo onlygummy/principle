@@ -6,7 +6,7 @@ The permission rules enforce the scope; the prompt describes the job.
 ## planwright
 
 The default agent. It turns a request into requirements, a design, and a work
-breakdown. It can edit plan files under `.opencode/plan/` and nothing else. It
+breakdown. It writes no files; the plan lives in the reply. It
 dispatches `scribewright` to write ADRs, glossary entries, and docs pages. It
 cannot edit code, commit, or push.
 

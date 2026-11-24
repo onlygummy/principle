@@ -6,9 +6,8 @@ permissions:
   # Rules append after the global list; the last match wins. Broad deny first,
   # then the narrow exceptions this agent actually needs.
   #
-  # Edits only plan files. Glossary/docs written by scribewright.
+  # Read-only: no file writes. Glossary and docs are written by scribewright.
   - { action: "edit", resource: "*", effect: "deny" }
-  - { action: "edit", resource: ".opencode/plan/**", effect: "allow" }
   # Grilling dispatches fact-finding sub-agents so the interview never asks the
   # user for something the filesystem can answer.
   - { action: "subagent", resource: "*", effect: "allow" }

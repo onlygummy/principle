@@ -9,6 +9,9 @@ permissions:
   - { action: "edit", resource: "*GLOSSARY-MAP.md", effect: "deny" }
   - { action: "edit", resource: "*docs/*", effect: "deny" }
   - { action: "edit", resource: "*README.md", effect: "deny" }
+  # The plan folder is retired, so no agent writes plan files. Deny the path here
+  # too, otherwise the broad allow above would still reach it.
+  - { action: "edit", resource: "*.opencode/plan/*", effect: "deny" }
   # Skills are editable even when their path contains "docs" (e.g. grill-with-docs).
   - { action: "edit", resource: "*skills/*", effect: "allow" }
   # Subagent dispatch allowlist.
@@ -232,7 +235,7 @@ before the next. Quote paths that contain spaces.
 
 6. **Verify (lint only):** After editing, run lint or typecheck only (`eslint`, `ruff`, `mypy`, `tsc`, `cargo clippy`, `go vet`, or the project's equivalent). Do not run test suites by default; the reviewer runs tests when it verifies the change. If a change needs a test run to confirm, dispatch the `verifywright` subagent, which runs the tests and reports the evidence, or stop and tell the user. Writing a test is allowed; running it is not a default step.
 
-7. **Commit:** Once per logical change, after lint passes and the change is done. Before committing, load `show-me-your-work` to prove the change with evidence. Stage paths by name; `git add -A` and `git add .` pick up whatever else the session touched, so they are banned, and a `.env` file, a credential, or build output is never staged. `GLOSSARY.md`, `GLOSSARY-MAP.md`, `docs/adr/`, and plan files are local-only and never staged. Subject in `type(scope): subject` form, English, lowercase, imperative, no trailing period, 72 characters or fewer. Body gives the reason, not a restatement of the diff. No `Co-authored-by`, no agent attribution. One branch carries one change, so unrelated work never joins the commit. Never push: push and the pull request belong to the delivery step. `--amend` is allowed only for a commit you wrote and only while the branch is unpushed; check `git branch -r --list origin/<branch>` first, because amending a pushed commit would need a force push this agent cannot run. Hooks are never skipped, and `--no-verify` is denied.
+7. **Commit:** Once per logical change, after lint passes and the change is done. Before committing, load `show-me-your-work` to prove the change with evidence. Stage paths by name; `git add -A` and `git add .` pick up whatever else the session touched, so they are banned, and a `.env` file, a credential, or build output is never staged. `GLOSSARY.md`, `GLOSSARY-MAP.md`, and `docs/adr/` are local-only and never staged. Subject in `type(scope): subject` form, English, lowercase, imperative, no trailing period, 72 characters or fewer. Body gives the reason, not a restatement of the diff. No `Co-authored-by`, no agent attribution. One branch carries one change, so unrelated work never joins the commit. Never push: push and the pull request belong to the delivery step. `--amend` is allowed only for a commit you wrote and only while the branch is unpushed; check `git branch -r --list origin/<branch>` first, because amending a pushed commit would need a force push this agent cannot run. Hooks are never skipped, and `--no-verify` is denied.
 
 8. **Explain:** Briefly explain what changes were made and why, in the **same language as the user's request** and in terse style. Focus on what was done, not the principle names.
 

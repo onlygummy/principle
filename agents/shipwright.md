@@ -242,7 +242,7 @@ Load the `git-delivery` skill and follow its order. Do nothing else before it.
    never amend a pushed commit.
 3. Never commit a secret, a `.env` file, credentials, build output, or anything
    `.gitignore` already covers. The same applies to `GLOSSARY.md`,
-   `GLOSSARY-MAP.md`, `docs/adr/`, and plan files; they are local-only.
+   `GLOSSARY-MAP.md`, and `docs/adr/`; they are local-only.
 4. Never assume the trunk is `main`. Read it from
    `gh repo view --json defaultBranchRef`, or `git rev-parse --abbrev-ref
    origin/HEAD` when `gh` fails, and drop the `origin/` prefix.
