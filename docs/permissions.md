@@ -66,6 +66,11 @@ Pipelines are checked one stage at a time. Each command between pipes is its own
 resource, so an allow has to cover every stage. See
 [ADR 0006](adr/0006-read-only-pipeline-allowlist.md).
 
+A `;` chain is checked one segment at a time, and one denied segment rejects the
+whole line. `&&` and `||` are not usable because Windows PowerShell 5.1 rejects
+them as separators. A `|` inside a quoted pattern such as `-Pattern "a|b"` is
+still split as a stage, so keep an alternation out of the quoted pattern.
+
 ## Read-only escapes
 
 A wildcard allow can inherit a write form hidden inside it. `git branch*` would

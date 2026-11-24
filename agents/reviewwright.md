@@ -208,9 +208,15 @@ A trustworthy review requires isolation. The reviewer must see only the diff, st
 
 ## Shell
 
-Run one command per call. The permission scanner rejects chained commands
-(`;`, `&&`, `||`), so split a sequence into separate calls and read each result
-before the next. Quote paths that contain spaces.
+A pipeline or a `;` chain runs in one call when every segment is allowed. The
+scanner checks each segment as its own resource, so one denied segment rejects
+the whole line. Use a pipeline to filter long output in place, and a `;` chain
+only for independent reads. Never chain a write with a follow-on step, because
+`;` runs the next command even when the first one fails. `&&` and `||` are not
+usable here: Windows PowerShell 5.1 rejects them as separators. Do not put `|`
+inside a quoted pattern such as `Select-String -Pattern "a|b"`, because the
+scanner splits on it. Split dependent steps into separate calls so you can read
+each result before the next, and quote paths that contain spaces.
 
 ## Instructions
 
