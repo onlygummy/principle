@@ -81,8 +81,10 @@ Read the state first. Then take exactly one of these exits.
 
 ## Order of work
 
-Run each git command as the whole command string, one command per call. Pass the
-repo path as the shell tool's working directory when it accepts one. A
+Run one git command per call, except for independent reads, which may share one
+call as a `;` chain because each segment is checked on its own. A pipeline works
+the same way, one stage at a time. Pass the repo path as the shell tool's working
+directory when it accepts one. A
 `cd <repo>` prefix is allowed, but `git -C <path>` is not: the allowlist matches
 whole command strings, so it reads as an unknown command, and a `git -C *` allow
 would also reach the write forms this agent must not have.
