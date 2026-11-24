@@ -46,11 +46,12 @@ permissions:
   - { action: "shell", resource: "git config --get*", effect: "allow" }
   # Layer 2: mixed commands, read-only sub-forms only. Their write forms stay
   # denied because no blanket `git <cmd>*` rule exists for them.
+  # Tag listing only. A bare `git tag v1` creates a lightweight tag, so the
+  # whole command is denied unless a list form pins the mode below.
+  - { action: "shell", resource: "git tag *", effect: "deny" }
   - { action: "shell", resource: "git tag --list*", effect: "allow" }
   - { action: "shell", resource: "git tag -l*", effect: "allow" }
   - { action: "shell", resource: "git tag -n*", effect: "allow" }
-  - { action: "shell", resource: "git tag --contains*", effect: "allow" }
-  - { action: "shell", resource: "git tag --sort*", effect: "allow" }
   - { action: "shell", resource: "git reflog show*", effect: "allow" }
   - { action: "shell", resource: "git reflog list*", effect: "allow" }
   - { action: "shell", resource: "git remote -v*", effect: "allow" }
@@ -162,28 +163,8 @@ permissions:
   - { action: "shell", resource: "git branch --set-upstream-to*", effect: "deny" }
   - { action: "shell", resource: "git branch --unset-upstream*", effect: "deny" }
   - { action: "shell", resource: "git branch --edit-description*", effect: "deny" }
-  # `git tag` is only allowed as read sub-forms above, but a write flag can be
-  # appended to one of them. Deny the write flags explicitly.
-  - { action: "shell", resource: "git tag -d*", effect: "deny" }
-  - { action: "shell", resource: "git tag -D*", effect: "deny" }
-  - { action: "shell", resource: "git tag --delete*", effect: "deny" }
-  - { action: "shell", resource: "git tag -a*", effect: "deny" }
-  - { action: "shell", resource: "git tag -s*", effect: "deny" }
-  - { action: "shell", resource: "git tag -f*", effect: "deny" }
-  - { action: "shell", resource: "git tag -m*", effect: "deny" }
-  - { action: "shell", resource: "git tag -u*", effect: "deny" }
   # `--output=<file>` turns a read command into a file write.
   - { action: "shell", resource: "git * --output*", effect: "deny" }
-  # A list flag such as `--sort` leaves the tag command mode unset, so a write
-  # flag can follow a read allow. Every write flag loses the match here.
-  - { action: "shell", resource: "git tag * -d*", effect: "deny" }
-  - { action: "shell", resource: "git tag * -D*", effect: "deny" }
-  - { action: "shell", resource: "git tag * --delete*", effect: "deny" }
-  - { action: "shell", resource: "git tag * -a*", effect: "deny" }
-  - { action: "shell", resource: "git tag * -m*", effect: "deny" }
-  - { action: "shell", resource: "git tag * -f*", effect: "deny" }
-  - { action: "shell", resource: "git tag * -s*", effect: "deny" }
-  - { action: "shell", resource: "git tag * -u*", effect: "deny" }
 ---
 
 ## Role

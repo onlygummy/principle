@@ -29,12 +29,11 @@ permissions:
   # Step 0 fallback when `origin/HEAD` does not resolve. Read-only: it reports
   # the remote's HEAD branch and its tracked refs.
   - { action: "shell", resource: "git remote show*", effect: "allow" }
-  # Release awareness without release rights: the last tag is readable, creating
-  # one stays with release-please.
+  # Release awareness without release rights: listing is readable, and the
+  # deny below makes every other tag form unreachable.
+  - { action: "shell", resource: "git tag *", effect: "deny" }
   - { action: "shell", resource: "git tag --list*", effect: "allow" }
   - { action: "shell", resource: "git tag -l*", effect: "allow" }
-  - { action: "shell", resource: "git tag --sort*", effect: "allow" }
-  - { action: "shell", resource: "git tag --contains*", effect: "allow" }
   # Rule 4 reads the trunk with `git rev-parse --abbrev-ref origin/HEAD`. The
   # symbolic-ref read sits in the write-guard block at the end of this list,
   # because the deny there also matches the one-argument form.
@@ -226,24 +225,7 @@ permissions:
   # Local cleanup after a squash merge. The branch is already merged remotely,
   # so force-deleting the local short-lived branch cannot lose reviewed work.
   - { action: "shell", resource: "git branch -D*", effect: "allow" }
-  # A list flag such as `--sort` leaves the tag command mode unset, so a write
-  # flag can follow a read allow. Every write flag loses the match here.
-  - { action: "shell", resource: "git tag -d*", effect: "deny" }
-  - { action: "shell", resource: "git tag -D*", effect: "deny" }
-  - { action: "shell", resource: "git tag --delete*", effect: "deny" }
-  - { action: "shell", resource: "git tag -a*", effect: "deny" }
-  - { action: "shell", resource: "git tag -m*", effect: "deny" }
-  - { action: "shell", resource: "git tag -f*", effect: "deny" }
-  - { action: "shell", resource: "git tag -s*", effect: "deny" }
-  - { action: "shell", resource: "git tag -u*", effect: "deny" }
-  - { action: "shell", resource: "git tag * -d*", effect: "deny" }
-  - { action: "shell", resource: "git tag * -D*", effect: "deny" }
-  - { action: "shell", resource: "git tag * --delete*", effect: "deny" }
-  - { action: "shell", resource: "git tag * -a*", effect: "deny" }
-  - { action: "shell", resource: "git tag * -m*", effect: "deny" }
-  - { action: "shell", resource: "git tag * -f*", effect: "deny" }
-  - { action: "shell", resource: "git tag * -s*", effect: "deny" }
-  - { action: "shell", resource: "git tag * -u*", effect: "deny" }
+
 ---
 
 ## Role
