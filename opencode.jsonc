@@ -25,8 +25,8 @@
   // Broad rules go first; each exception follows so it can win the match.
   // Principle: minimum privilege per agent (YAGNI + SOC).
   "permissions": [
-    // File editing — denied globally. Buildwright overrides to allow; Planwright
-    // gets a narrow allowlist limited to plan files and domain docs.
+    // File editing is denied globally. Buildwright and scribewright widen it for
+    // their own paths; Planwright stays read-only and no agent writes plan files.
     { "action": "edit", "resource": "*", "effect": "deny" },
     { "action": "read", "resource": "*", "effect": "allow" },
     { "action": "glob", "resource": "*", "effect": "allow" },

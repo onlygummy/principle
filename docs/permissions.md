@@ -40,12 +40,12 @@ and are not in git.
 
 | Agent | Edit scope | Shell scope |
 | --- | --- | --- |
-| `planwright` | Files under `.opencode/plan/` | Read-only git, read-only file and exploration commands, and project run commands (lint and typecheck run without a prompt; test and verify ask first) |
-| `buildwright` | Code and config; docs files are denied | Full allow, but `git *` is denied except read forms, `git add`, `git rm`, `git mv`, `git stash`, `git commit`, and `git switch*`; `--amend` is allowed only on an unpushed commit, `--no-verify` and `-n` are denied, push stays denied, and the destructive switch forms are denied; test runners ask |
+| `planwright` | Nothing | Read-only git and `gh` (repo, pr, issue), read-only file and exploration commands, and project run commands (lint and typecheck run without a prompt; test and verify ask first) |
+| `buildwright` | Code and config; docs files are denied | Full allow, but `git *` is denied except read forms, `git fetch` (force spellings are denied), `git pull --ff-only`, `git add`, `git rm`, `git mv`, `git reset -- <path>`, `git stash`, `git commit`, `git revert`, `git cherry-pick`, `git merge`, and `git switch*`; read-only `gh` (repo, pr, run); `--amend` is allowed only on an unpushed commit, `--no-verify` and `-n` are denied, push stays denied, and the destructive switch forms are denied; test runners ask |
 | `branchwright` | Nothing | Read-only state checks plus `cd *` and `git switch -c*`; destructive switch forms and branch deletion are denied |
 | `verifywright` | Nothing | Read-only git, lint and typecheck commands, and test runners that ask |
 | `reviewwright` | Nothing | Read-only git, test runners, and lint; no `add`, `commit`, or `push` |
-| `shipwright` | Nothing | Git write path and `gh pr` read, create, and squash merge; may dispatch `branchwright` when the tree is clean; push is allowed; `gh pr merge` is allowed but only with squash, and `--merge`, `--rebase`, and `--admin` are denied; trunk push, force push, prune, and tag push stay denied; the merged remote branch is deleted by `--delete-branch`; local `git branch --delete` is allowed, and local `git branch -D` is allowed after a squash merge to clean up the short-lived branch |
+| `shipwright` | Nothing | Git write path, `git tag` listing only, every other tag form denied, and `gh` read, create, run, and squash merge; may dispatch `branchwright` when the tree is clean; push is allowed; build commands ask first; `gh pr merge` is allowed but only with squash, and `--merge`, `--rebase`, and `--admin` are denied; trunk push, force push, prune, and tag push stay denied; the merged remote branch is deleted by `--delete-branch`; local `git branch --delete` is allowed, and local `git branch -D` is allowed after a squash merge to clean up the short-lived branch |
 | `scribewright` | The docs tree and `README.md` | Nothing |
 
 `shipwright` pushes without a prompt, but it denies `git push --prune` and
@@ -90,8 +90,16 @@ so the `git branch --list` pre-check in the prompt is its guard.
 The unstage rule shows the fix. `git restore --staged -W` touches only the
 index under `--staged`, but the `-W` flag reaches the worktree without matching
 a deny written for `--worktree`. `git reset -- <path>` replaced it: after `--`,
-every word is a pathspec, so the allowed form has no flag surface. See
+every word is a pathspec, so the allowed form has no flag surface. `buildwright`
+now holds the same pathspec form, so it can unstage a file it staged by mistake
+without any flag that could reach file content. See
 [ADR 0010](adr/0010-ship-can-unstage.md).
+
+A bare `git tag v1` creates a lightweight tag with no flag at all, and a list
+flag such as `--sort` does not pin list mode, so denying individual write flags
+leaves gaps. `shipwright`, `planwright`, `buildwright`, and `reviewwright` deny
+the whole `git tag` command and allow back only `--list`, `-l`, and `-n`, which
+pin list mode.
 
 `buildwright` now holds a commit write. A commit stays on the local branch and
 can be amended or dropped, so it is not where work leaves the machine; the
